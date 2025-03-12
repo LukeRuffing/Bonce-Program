@@ -1,128 +1,114 @@
-//package Bounce;
+// Description: A simple bouncing ball application that demonstrates the use of threads, scrollbars, and buttons in Java.
+//Author: Luke Ruffing
+//Class: CMSC-3080-001
+//Date: 3/12/2025
+
+// Importing necessary packages
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 
-//import BouncingBall.Objc;
+//public class Bounce extends Frame 
+public class Bounce extends Frame 
+    implements WindowListener, 
+               ComponentListener, 
+               ActionListener, 
+               AdjustmentListener, 
+               Runnable {
 
+    private static final long serialVersionUID = 10L; // Serial version ID for serialization
 
+    // Constants
+    private final int WIDTH = 640; // Frame width
+    private final int HEIGHT = 400; // Frame height
+    private final int BUTTONH=20; // Button height
+    private final int BUTTONHS = 5; // Button spacing
+    private final int MAXObj=100;// Max object size
+    private final int MINObj=10;// Min object size
+    private final int SPEED=50;// Initial speed
+    private final int SBvisible=10;// Scrollbar visibility
+    private final int SBunit=1;// Scrollbar unit step size
+    private final int SBblock=10;// Scrollbar block step size
+    private final int SCROLLBARH=BUTTONH;// Scrollbar height
+    private final int SOBJ=21;// Initial object width
 
+    // Variables for frame dimensions and object properties
+    private int WinWidth=WIDTH;// Initial frame width
+    private int WinHeight=HEIGHT;// Initial frame height
+    private int ScreenWidth;// Drawing screen width
+    private int ScreenHeight;// Drawing screen height
+    private int WinTop=10;// Top of frame
+    private int WinLeft=10;// Left side of frame
+    private int BUTTONW=50;// Initial button width
+    private int CENTER=(WIDTH/2);// Initial screen center
+    private int BUTTONS=BUTTONW/4;// Initial button spacing
 
-public class Bounce extends Frame implements WindowListener, ComponentListener, ActionListener, AdjustmentListener, Runnable{
-
-    private static final long serialVersionUID = 10L;
-
-    private final int WIDTH = 640;
-    private final int HEIGHT = 400;
-    private final int BUTTONH=20;
-    private final int BUTTONHS = 5;
-
-    private final int MAXObj=100;//max object size
-    private final int MINObj=10;//min object size
-    private final int SPEED=50;//initial speed
-    private final int SBvisible=10;//visible Scroll bar
-    private final int SBunit=1;//unit step size
-    private final int SBblock=10;//block step size
-    private final int SCROLLBARH=BUTTONH;//scrollbar height
-    private final int SOBJ=21;//initial object width
+    private final double DELAY = 10; // Delay for thread sleep
+    private int SObj=SOBJ;// Initial object width
+    private int SpeedSBmin=1;// Speed scrollbar min value
+    private int SpeedSBmax=100+SBvisible;// Speed scrollbar max with visible offset
+    private int SpeedSBinit=SPEED;// Initial speed scrollbar value
+    private int ScrollBarW;// Scrollbar width
     
-    
-    private int WinWidth=WIDTH;//initial frame width
-    private int WinHeight=HEIGHT;//initial frame height
-    private int ScreenWidth;//drawing screen width
-    private int ScreenHeight;//drawing screen height
-    private int WinTop=10;//top of frame
-    private int WinLeft=10;//left side of frame
-    private int BUTTONW=50;//initial button width
-    private int CENTER=(WIDTH/2);//initial screen center
-    private int BUTTONS=BUTTONW/4;//initial button spacing
+    private Insets I; // Insets for frame padding
 
-
-    private final double DELAY = 10;
-    private int SObj=SOBJ;//initial object width
-    private int SpeedSBmin=1;//speed scrollbar min value
-    private int SpeedSBmax=100+SBvisible;//speed scrollbar max with visible offset
-    private int SpeedSBinit=SPEED;//initial speed scrollbar value
-    private int ScrollBarW;//Scrollbar width
-    
-    private Insets I;
-
+    // Buttons
     Button Start, Shape,Clear,Tail,Quit;
 
-
+    // Object for drawing
     private Objc Obj;
     private Label SPEEDL = new Label("Speed",Label.CENTER);
     private Label SIZEL = new Label("Size",Label.CENTER);
     Scrollbar SpeedScrollBar, ObjSizeScrollBar;
-    private Thread thethread;//thread for timer delay
+    private Thread thethread;// Thread for timer delay
    
+    boolean run; // Flag to control running state
+    boolean TimePause; // Flag to control pause state
+    boolean started; // Flag to check if started
+    int speed; // Variable for speed
+    int delay; // Variable for delay
 
-    boolean run;
-    boolean TimePause;
-    boolean started;
-    int speed;
-    int delay;
+    boolean tail; // Flag to control tail drawing
 
-    boolean tail;
-
-   
-
-    
-
-
-
+    // Constructor to initialize the frame
     Bounce() {
-       
-        setTitle("Bouncing Ball");
-        setLayout(null);
-
-        setVisible(true);
-
-        MakeSheet();
-
-        started = false;
-        //TimePause = false;
-
+        setTitle("Bouncing Ball"); // Set frame title
+        setLayout(null); // Set layout to null
+        setVisible(true); // Make frame visible
+        MakeSheet(); // Initialize frame dimensions
+        started = false; // Set started flag to false
         try{
-            initComponents();
+            initComponents(); // Initialize components
         }catch (Exception e){
             e.printStackTrace();}
-
-
-        SizeScreen();
-        start();
+        SizeScreen(); // Set screen size
+        start(); // Start the thread
     }
 
-  
+    // Method to initialize components
     public void initComponents() throws Exception, IOException{
- 
-        Obj = new Objc(SObj, ScreenWidth, ScreenHeight);
-
-        TimePause = true;
-        run = true;
-        delay = (int) DELAY;
-
-        Start = new Button("Run");
+        Obj = new Objc(SObj, ScreenWidth, ScreenHeight); // Create drawing object
+        TimePause = true; // Set pause flag
+        run = true; // Set running flag
+        delay = (int) DELAY; // Set delay
+        Start = new Button("Run"); // Create buttons
         Shape = new Button("Circle");
         Clear = new Button("Clear");
         Tail = new Button("No Tail");
         Quit = new Button("Quit");
-
-        add("Center",Start);
+        add("Center",Start); // Add buttons to frame
         add("Center",Shape);
         add("Center",Tail);
         add("Center",Clear);
         add("Center",Quit);
-
-        Start.addActionListener(this);
+        Start.addActionListener(this); // Add action listeners to buttons
         Shape.addActionListener(this);
         Tail.addActionListener(this);
         Clear.addActionListener(this);
         Quit.addActionListener(this);
-        this.addComponentListener(this);
-        this.addWindowListener(this);
-
-        SpeedScrollBar=new Scrollbar(Scrollbar.HORIZONTAL);
+        this.addComponentListener(this); // Add component listener to frame
+        this.addWindowListener(this); // Add window listener to frame
+        SpeedScrollBar=new Scrollbar(Scrollbar.HORIZONTAL); // Create scrollbars
         SpeedScrollBar.setMaximum(SpeedSBmax);
         SpeedScrollBar.setMinimum(SpeedSBmin);
         SpeedScrollBar.setUnitIncrement(SBunit);
@@ -130,7 +116,6 @@ public class Bounce extends Frame implements WindowListener, ComponentListener, 
         SpeedScrollBar.setValue(SpeedSBinit);
         SpeedScrollBar.setVisibleAmount(SBvisible);
         SpeedScrollBar.setBackground(Color.gray);
-
         ObjSizeScrollBar=new Scrollbar(Scrollbar.HORIZONTAL);
         ObjSizeScrollBar.setMaximum(MAXObj);
         ObjSizeScrollBar.setMinimum(MINObj);
@@ -139,273 +124,178 @@ public class Bounce extends Frame implements WindowListener, ComponentListener, 
         ObjSizeScrollBar.setValue(SOBJ);
         ObjSizeScrollBar.setVisibleAmount(SBvisible);
         ObjSizeScrollBar.setBackground(Color.gray);
-
-       
-
         Obj.setBackground(Color.white);
-
-
-        add(SpeedScrollBar);
+        add(SpeedScrollBar); // Add scrollbars to frame
         add(ObjSizeScrollBar);
         add(SPEEDL);
         add(SIZEL);
         add(Obj);
-
-        
-        SpeedScrollBar.addAdjustmentListener(this);
+        SpeedScrollBar.addAdjustmentListener(this); // Add adjustment listeners to scrollbars
         ObjSizeScrollBar.addAdjustmentListener(this);
-
-        setPreferredSize(new Dimension(WIDTH, HEIGHT));
-        setMinimumSize(getPreferredSize());
-        setBounds(WinLeft, WinTop, WIDTH, HEIGHT); //size and position the frame
-        validate();//validate the layout
-
+        setPreferredSize(new Dimension(WIDTH, HEIGHT)); // Set preferred size of frame
+        setMinimumSize(getPreferredSize()); // Set minimum size of frame
+        setBounds(WinLeft, WinTop, WIDTH, HEIGHT); // Size and position the frame
+        validate();// Validate the layout
     }
 
+    // Method to initialize frame dimensions
     private void MakeSheet(){
-
-        I=getInsets();
-        ScreenWidth=WinWidth-I.left-I.right;
-        ScreenHeight=WinHeight-I.top-2*(BUTTONH+BUTTONHS)-I.bottom;
-        
-        setSize(WinWidth,WinHeight);
-        CENTER=(ScreenWidth/2);
-        BUTTONW=ScreenWidth/11;
-        BUTTONS=BUTTONW/4;
-        setBackground(Color.lightGray);
-
-        ScrollBarW = 2*BUTTONW;
-
+        I=getInsets(); // Get insets
+        ScreenWidth=WinWidth-I.left-I.right; // Calculate screen width
+        ScreenHeight=WinHeight-I.top-2*(BUTTONH+BUTTONHS)-I.bottom; // Calculate screen height
+        setSize(WinWidth,WinHeight); // Set frame size
+        CENTER=(ScreenWidth/2); // Calculate center
+        BUTTONW=ScreenWidth/11; // Calculate button width
+        BUTTONS=BUTTONW/4; // Calculate button spacing
+        setBackground(Color.lightGray); // Set background color
+        ScrollBarW = 2*BUTTONW; // Calculate scrollbar width
     }
 
+    // Method to set screen size and position buttons
     private void SizeScreen(){
-
-        //position the buttons
-        Start.setLocation(CENTER-2*(BUTTONW+BUTTONS)-BUTTONW/2,ScreenHeight+BUTTONHS+I.top);
+        Start.setLocation(CENTER-2*(BUTTONW+BUTTONS)-BUTTONW/2,ScreenHeight+BUTTONHS+I.top); // Position buttons
         Shape.setLocation(CENTER-BUTTONW-BUTTONS-BUTTONW/2,ScreenHeight+BUTTONHS+I.top);
         Tail.setLocation(CENTER-BUTTONW/2,ScreenHeight+BUTTONHS+I.top);
         Clear.setLocation(CENTER+BUTTONS+BUTTONW/2,ScreenHeight+BUTTONHS+I.top);
         Quit.setLocation(CENTER+BUTTONW+2*BUTTONS+BUTTONW/2,ScreenHeight+BUTTONHS+I.top);
-
-        //size the buttons
-        Start.setSize(BUTTONW,BUTTONH);
+        Start.setSize(BUTTONW,BUTTONH); // Size buttons
         Shape.setSize(BUTTONW,BUTTONH);
         Tail.setSize(BUTTONW,BUTTONH);
         Clear.setSize(BUTTONW,BUTTONH);
         Quit.setSize(BUTTONW,BUTTONH);
-
-        SpeedScrollBar.setLocation(I.left+BUTTONS,ScreenHeight+BUTTONHS+I.top);
+        SpeedScrollBar.setLocation(I.left+BUTTONS,ScreenHeight+BUTTONHS+I.top); // Position scrollbars
         ObjSizeScrollBar.setLocation(WinWidth-ScrollBarW-I.right-BUTTONS,ScreenHeight+BUTTONHS+I.top);
-        SPEEDL.setLocation(I.left+BUTTONS,ScreenHeight+BUTTONHS+BUTTONH+I.top);
+        SPEEDL.setLocation(I.left+BUTTONS,ScreenHeight+BUTTONHS+BUTTONH+I.top); // Position labels
         SIZEL.setLocation(WinWidth-ScrollBarW-I.right,ScreenHeight+BUTTONHS+BUTTONH+I.top);
-        SpeedScrollBar.setSize(ScrollBarW,SCROLLBARH);
+        SpeedScrollBar.setSize(ScrollBarW,SCROLLBARH); // Size scrollbars
         ObjSizeScrollBar.setSize(ScrollBarW,SCROLLBARH);
-        SPEEDL.setSize(ScrollBarW,BUTTONH);
+        SPEEDL.setSize(ScrollBarW,BUTTONH); // Size labels
         SIZEL.setSize(ScrollBarW,SCROLLBARH);
-        Obj.setBounds(I.left,I.top,ScreenWidth,ScreenHeight);
+        Obj.setBounds(I.left,I.top,ScreenWidth,ScreenHeight); // Set drawing object bounds
     }
 
+    // Method to stop the application
     public void stop(){
-
-        run = false;
-       
-        Start.removeActionListener(this);
+        run = false; // Set running flag to false
+        Start.removeActionListener(this); // Remove action listeners from buttons
         Shape.removeActionListener(this);
         Clear.removeActionListener(this);
         Tail.removeActionListener(this);
         Quit.removeActionListener(this);
-
-       
-        this.removeComponentListener(this);
-        this.removeWindowListener(this);
-
-        SpeedScrollBar.removeAdjustmentListener(this);
+        this.removeComponentListener(this); // Remove component listener from frame
+        this.removeWindowListener(this); // Remove window listener from frame
+        SpeedScrollBar.removeAdjustmentListener(this); // Remove adjustment listeners from scrollbars
         ObjSizeScrollBar.removeAdjustmentListener(this);
-
-       
-       
-        dispose();
-        
-        thethread.interrupt();
-
-        
-        System.exit(0);
+        dispose(); // Dispose the frame
+        thethread.interrupt(); // Interrupt the thread
+        System.exit(0); // Exit the application
     }
 
+    // Method to start the application
     public void start(){
-
-        Obj.repaint();
-
-        if(thethread == null){ //create a thread if it doesnt exist
-
-            thethread = new Thread(this);//create a new thread
-            thethread.start();//start the thread
-
+        Obj.repaint(); // Repaint the drawing object
+        if(thethread == null){ // Create a thread if it doesn't exist
+            thethread = new Thread(this); // Create a new thread
+            thethread.start(); // Start the thread
         }
     }
 
- 
+    // Method to run the thread
     public void run(){
-
-        while(run){
-            
-           
-
-                started = true;
-                try{
-                    Thread.sleep(delay);
-                }
-                catch (InterruptedException e){}
-
-              if(!TimePause){   
-                Obj.move();//MOVE method
-                Obj.repaint();
-               
-               
+        while(run){ // While running
+            started = true; // Set started flag to true
+            try{
+                Thread.sleep(delay); // Sleep for delay duration
             }
-
-           // Obj.setxold(Obj.getx());
-           // Obj.setyold(Obj.gety());
+            catch (InterruptedException e){}
+            if(!TimePause){   
+                Obj.move(); // Move the object
+                Obj.repaint(); // Repaint the object
+            }
         }
-
-        stop();
-
+        stop(); // Stop the application
     }
 
+    // Method to handle button actions
     public void actionPerformed(ActionEvent e) {
-
-
         Object source = e.getSource(); 
-
         if(source==Start){
             if(Start.getLabel().equals("Run")){ 
-
                 Start.setLabel("Pause");  
                 TimePause = false;  
                 started = true;
-                //thethread.start(); //not sure if needed          
+                        
             }
             else{
-
                 Start.setLabel("Run");  
                 TimePause = true;
                 started = false;
-                //thethread.interrupt();               
+                             
             }
         }
-
         if(source==Shape){
-
-           // if(TimePause){ 
-           //     Obj.Clear();
-           // }
-        
             if(Shape.getLabel()=="Circle"){
-
                 Shape.setLabel("Square"); 
                 Obj.rectangle(false);   
-               
             }
             else{
-
                 Shape.setLabel("Circle"); 
                 Obj.rectangle(true);
             }
             Obj.repaint();
         }
-
         if(source==Tail){
-            
             if(Tail.getLabel()=="Tail"){
-
                 Tail.setLabel("No Tail"); 
                 started = true;
                 Obj.settail(true);
             }
             else{
-
                 Tail.setLabel("Tail"); 
                 started = false;
                 Obj.settail(false);
             }
-
         }
-
         if(source==Clear){  
-
             Obj.Clear();
             Obj.repaint();
         }
-
         if(source==Quit){  
-
             stop();
         }
-
-
-        
-
     }
 
+    // Method to handle scrollbar adjustments
     public void adjustmentValueChanged(AdjustmentEvent e) {
-
         int TS;
-        Scrollbar sb = (Scrollbar)e.getSource(); //get the scrollbar that triggered the event
-
-
+        Scrollbar sb = (Scrollbar)e.getSource(); // Get the scrollbar that triggered the event
         if(sb == SpeedScrollBar) {
-
             int validatespeed = SpeedScrollBar.getValue();
-
             delay = 100 - validatespeed + 1;
-
-
-           if (thethread != null) {
+            if (thethread != null) {
                 thethread.interrupt();
             }
         }
         if(sb==ObjSizeScrollBar){
-
-            TS = e.getValue();//get the value
-            TS = ( TS/2)*2 + 1;//Make odd to account for center position i.e. +
-            
-
-            //int validatesize = sb.getValue();
-
-            if(TS <= ScreenHeight && TS <= ScreenWidth){// might be < ijnsted of <=
-
-                  Obj.update(TS);//change the size in the drawing object              
+            TS = e.getValue();// Get the value
+            TS = ( TS/2)*2 + 1;// Make odd to account for center position
+            if(TS <= ScreenHeight && TS <= ScreenWidth){// Validate size
+                Obj.update(TS);// Change the size in the drawing object              
             }
             else{
                 ObjSizeScrollBar.setValue(SObj); 
-                          
             }
-            
             if(!Obj.gettail()){
                 Obj.Clear();
             }
-
-            
-            
         }
-        Obj.repaint();//force a repaint
-
-
-
-
-
-
+        Obj.repaint();// Force a repaint
     }
 
-
-    
-
-
+    // Window listener methods
     public void windowClosing(WindowEvent e){
         stop();
-        
     }
-
     public void windowClosed(WindowEvent e){}
     public void windowOpened(WindowEvent e){}
     public void windowActivated(WindowEvent e){}
@@ -413,81 +303,51 @@ public class Bounce extends Frame implements WindowListener, ComponentListener, 
     public void windowIconified(WindowEvent e){}
     public void windowDeiconified(WindowEvent e){}
 
+    // Method to check object size within bounds
     public void CheckSize(){
         int x = Obj.getx();
         int y = Obj.gety();
-        
         int size = Obj.getobjs();
-
         int right = x + (size - 1)/2;
         int bottom = y + (size - 1)/2;
-
         int left = x - (size - 1)/2;
         int top = y - (size - 1)/2;
-
         if(right > ScreenWidth){
-
             x = ScreenWidth - (size - 1)/2;
-            //Obj.update(obj.getSizeObj);
-
         }
         if(bottom > ScreenHeight){
-
             y = ScreenWidth - (size - 1)/2;
-
         }
         if(left < 0){
-
             x = (size - 1)/2;
-
         }
         if(top < 0){
-
             y = (size - 1)/2;
-
         }
-
         Obj.setx(x);
         Obj.sety(y);
-
-       
     }
 
+    // Component listener methods
     public void componentResized(ComponentEvent e) {
         WinWidth = getWidth();
         WinHeight = getHeight();
-
         MakeSheet();
-
         Obj.reSize(ScreenWidth, ScreenHeight);
-
-        
-
-        CheckSize();//NOT SURE
-
+        CheckSize();
         SizeScreen();
-
-    
-        
     }
     public void componentHidden(ComponentEvent e) {}
     public void componentShown(ComponentEvent e) {}
     public void componentMoved(ComponentEvent e){}
 
-
-   
- 
- 
+    // Main method to create the frame
     public static void main(String[] args){
-       new Bounce();//create an object
-      
+       new Bounce(); // Create an object
     }
-   
-
- 
-
 }
 
+// Class for drawing object
 class Objc extends Canvas{
 
     private static final long serialVersionUID = 11L;
@@ -507,13 +367,10 @@ class Objc extends Canvas{
     private int xold;
     private int yold;
 
-     boolean right;
-     boolean down;
-    //private boolean left;
-    //private boolean up;
+    boolean right;
+    boolean down;
 
-
-
+    // Constructor to initialize object
     public Objc(int SB, int w, int h){
         ScreenWidth = w;
         ScreenHeight = h;
@@ -522,28 +379,16 @@ class Objc extends Canvas{
         clear = false;
         y = ScreenHeight/2;
         x = ScreenWidth/2;
-
-      
         right = true;
         down = true;
-
         ymin = 0;
         ymax = ScreenHeight;
         xmin = 0;
         xmax = ScreenWidth;
-
-        
     }
 
-    
-
-   // public int getxold(){return xold;}
-   // public void setxold(int a){xold = a;}
-   // public int getyold(){return yold;}
-   // public void setyold(int a){yold = a;}
-
+    // Method to calculate minimum bounds
     public void calculatemins(){
-
         int offset = (SObj - 1)/2;
         xmin = offset;
         xmax = ScreenWidth - offset;
@@ -551,78 +396,74 @@ class Objc extends Canvas{
         ymax =  ScreenHeight - offset;
     }
 
+    // Method to check x bounds
     public boolean checkxin(){
         calculatemins();
         return (x <= xmin || x>= xmax);
     }
 
+    // Method to check y bounds
     public boolean checkyin(){
         calculatemins();
         return (y <= ymin || y>= ymax);
     }
 
+    // Method to set shape to rectangle
     public void rectangle(boolean r){
         rect = r; 
     }
 
+    // Method to update object size
     public void update(int NS){
         SObj = NS; 
     }
 
+    // Method to resize object
     public void reSize(int w, int h){
         ScreenWidth = w;
         ScreenHeight = h;
         y = ScreenHeight/2;
         x = ScreenWidth/2;
-
         calculatemins();
     }
 
-
+    // Method to clear object
     public void Clear(){
         clear = true; 
     }
 
+    // Getter and setter methods
     public int getx(){return x;}
     public int gety(){return y;}
     public void setx(int a){x=a;}
     public void sety(int a){y=a;}
-
     public int getobjs(){return SObj;}
     public void setobjs(int a){SObj=a;}
-
     public boolean gettail(){return tail;}
     public void settail(boolean a){tail=a;}
 
-
+    // Method to paint object
     public void paint(Graphics g){      
         update(g);
     }
 
+    // Method to update object
     public void update(Graphics g){    
-
-        
         if(clear){
-
             super.paint(g);
             clear = false;
             g.setColor(Color.red);
             g.drawRect(0,0,ScreenWidth-1,ScreenHeight-1);
         }
-
         if(!tail){
             g.setColor(getBackground());
-           // g.setColor(Color.lightGray);
-             if(rect){
-                 g.fillRect(xold-(SObj-1)/2 - 1,yold-(SObj-1)/2-1,SObj+2,SObj+2);
-             }
-             else{
-                 g.fillOval(xold-(SObj-1)/2 - 1,yold-(SObj-1)/2-1,SObj+2,SObj+2);
-             }  
-         }
-
-       
-
+            if(rect){
+                g.fillRect(xold-(SObj-1)/2 - 1,yold-(SObj-1)/2-1,SObj+2,SObj+2);
+            }
+            else{
+                g.fillOval(xold-(SObj-1)/2 - 1,yold-(SObj-1)/2-1,SObj+2,SObj+2);
+            }  
+        }
         if(rect){
             g.setColor(Color.lightGray);
             g.fillRect(x-(SObj-1)/2,y-(SObj-1)/2,SObj,SObj);
@@ -638,35 +479,22 @@ class Objc extends Canvas{
         }
         g.setColor(Color.red);
         g.drawRect(0,0,ScreenWidth-1,ScreenHeight-1);
-        
-
         xold = x;
         yold = y;
-        
-
     }
 
+    // Method to move object
     public void move() {
-    
-
         xold = x;
         yold = y;
-
         if (checkxin()) {
             right = !right;
         }
         if (checkyin()) {
             down = !down;
         }
-
         x += (right ? 1 : -1);
         y += (down ? 1 : -1);
         repaint();
-    
     }
-
-
-
-  
-
 }
