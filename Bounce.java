@@ -280,7 +280,8 @@ public class Bounce extends Frame
             TS = e.getValue();// Get the value
             TS = ( TS/2)*2 + 1;// Make odd to account for center position
             if(TS <= ScreenHeight && TS <= ScreenWidth){// Validate size
-                Obj.update(TS);// Change the size in the drawing object              
+                Obj.update(TS);// Change the size in the drawing object  
+                Obj.stayInBounds(ScreenWidth, ScreenHeight); // Ensure the object stays within bounds     
             }
             else{
                 ObjSizeScrollBar.setValue(SObj); 
@@ -366,6 +367,7 @@ class Objc extends Canvas{
     private int xmax;
     private int xold;
     private int yold;
+       
 
     boolean right;
     boolean down;
@@ -418,12 +420,37 @@ class Objc extends Canvas{
         SObj = NS; 
     }
 
+    public void stayInBounds(int newScreenWidth, int newScreenHeight) {
+        int half = SObj / 2;
+    
+        // Ensure the object stays inside the right and bottom edges
+        if (x + half >= newScreenWidth) {
+            x = newScreenWidth - half - 2; // Adjust to stay fully within the right edge
+            right = !right; // Reverse direction
+        }
+        if (y + half >= newScreenHeight) {
+            y = newScreenHeight - half - 2; // Adjust to stay fully within the bottom edge
+            down = !down; // Reverse direction
+        }
+    
+        // Ensure the object doesn't go beyond the left and top edges
+        if (x - half <= 0) {
+            x = half; // Adjust to stay fully within the left edge
+            right = !right; // Reverse direction
+        }
+        if (y - half <= 0) {
+            y = half; // Adjust to stay fully within the top edge
+            down = !down; // Reverse direction
+        }
+    }
+
     // Method to resize object
     public void reSize(int w, int h){
         ScreenWidth = w;
         ScreenHeight = h;
         y = ScreenHeight/2;
         x = ScreenWidth/2;
+        stayInBounds(w,h); // Ensure the object stays within new bounds
         calculatemins();
     }
 
